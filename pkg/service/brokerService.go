@@ -12,17 +12,53 @@ type ServiceBroker interface {
 }
 
 type serviceBroker struct {
+	availableServices []model.Service
+	availablePlans    []model.Plan
 }
 
 func NewServiceBroker() ServiceBroker {
-	return &serviceBroker{}
+	services := []model.Service{}
+	free, notFree := true, false
+	plans := []model.Plan{}
+	plans = append(plans,
+		model.Plan{
+			Id:          "pA",
+			Description: "Plan A",
+			Name:        "planA",
+			Free:        &free,
+		}, model.Plan{
+			Id:          "pB",
+			Description: "Plan B",
+			Name:        "planB",
+			Free:        &notFree,
+		})
+
+	services = append(services,
+		model.Service{
+			Bindable:    true,
+			Id:          "A",
+			Name:        "serviceA",
+			Description: "Service A",
+			Plans:       plans,
+		},
+		model.Service{
+			Bindable:    false,
+			Id:          "B",
+			Name:        "serviceB",
+			Description: "Service B",
+			Plans:       plans,
+		})
+	return &serviceBroker{
+		availableServices: services,
+		availablePlans:    plans,
+	}
 }
 
 // get the catalog of services that the service broker offers
 // (GET /v2/catalog)
 func (s *serviceBroker) CatalogGet(ctx echo.Context, params model.CatalogGetParams) error {
-	services := make([]model.Service, 0)
-	catalog := &model.Catalog{Services: &services}
+
+	catalog := &model.Catalog{Services: &s.availableServices}
 	ctx.JSON(200, catalog)
 	return nil
 }
